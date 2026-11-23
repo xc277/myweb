@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>我的图片展示页</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+    background: #1e1f22;
+    color: #e8e8e8;
+    font-family: "Microsoft YaHei", system-ui, sans-serif;
+    padding: 32px 16px;
+  }
+
+  h1 {
+    font-size: 20px;
+    font-weight: 500;
+    letter-spacing: 1px;
+    color: #b8b8b8;
+  }
+
+  /* 图片容器 */
+  .pic-box {
+    width: min(90vw, 760px);
+    aspect-ratio: 16 / 9;
+    background: #2a2b2f;
+    border-radius: 14px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, .5);
+  }
+
+  #showPic {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    display: none;          /* 没图片时隐藏 */
+  }
+
+  #tip {
+    font-size: 14px;
+    color: #6b6c70;
+  }
+
+  /* 按钮 */
+  .btn-row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  button, label.file-btn {
+    padding: 10px 22px;
+    font-size: 14px;
+    border-radius: 8px;
+    border: 1px solid #3a3b40;
+    background: #34353a;
+    color: #e8e8e8;
+    cursor: pointer;
+    transition: .2s;
+    user-select: none;
+  }
+
+  button:hover, label.file-btn:hover {
+    background: #3e4046;
+    border-color: #56585f;
+  }
+
+  /* 隐藏原生文件输入框 */
+  #fileInput { display: none; }
+</style>
+</head>
+<body>
+
+  <h1>我的图片展示页</h1>
+
+  <div class="pic-box">
+    <img id="showPic" alt="预览图片">
+    <span id="tip">还没有图片，点下面按钮选一张吧</span>
+  </div>
+
+  <div class="btn-row">
+    <!-- 方式1：从本地选图（临时预览，刷新后没了） -->
+    <label class="file-btn">
+      从本地选图
+      <input type="file" id="fileInput" accept="image/*">
+    </label>
+
+    <!-- 方式2：填网络图片地址（可持久保存） -->
+    <button id="urlBtn">用网络地址设置</button>
+
+    <!-- 恢复默认 -->
+    <button id="resetBtn">恢复默认图</button>
+  </div>
+
+<script>
+  const img    = document.getElementById('showPic');
+  const tip    = document.getElementById('tip');
+  const fileIn = document.getElementById('fileInput');
+
+  // 默认图片地址（可换成你自己喜欢的）
+  const DEFAULT_IMG = 'https://picsum.photos/1200/675';
+
+  // ------- 显示图片 -------
+  function showImage(src) {
+    img.src = src;
+    img.style.display = 'block';
+    tip.style.display = 'none';
+  }
+
+  // ------- 启动时读取上次保存的图片 -------
+  const saved = localStorage.getItem('myPageImg');
+  if (saved) {
+    showImage(saved);
+  } else {
+    showImage(DEFAULT_IMG);   // 想默认空白就去掉这行
+  }
+
+  // ------- 方式1：本地选图 -------
+  fileIn.addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // 用 FileReader 读成 base64，页面内直接显示
+    const reader = new FileReader();
+    reader.onload = ev => {
+      showImage(ev.target.result);
+    };
+    reader.readAsDataURL(file);
+    // 注意：base64 太大，不建议存 localStorage，刷新会丢
+  });
+
+  // ------- 方式2：网络地址 -------
+  document.getElementById('urlBtn').addEventListener('click', () => {
+    const url = prompt('请输入图片的网络地址（以 http/https 开头）：');
+    if (!url) return;
+
+    if (!/^https?:\/\//i.test(url.trim())) {
+      alert('地址格式不对，必须以 http:// 或 https:// 开头');
+      return;
+    }
+
+    const clean = url.trim();
+    showImage(clean);
+    localStorage.setItem('myPageImg', clean);   // 保存，下次打开还在
+  });
+
+  // ------- 恢复默认 -------
+  document.getElementById('resetBtn').addEventListener('click', () => {
+    localStorage.removeItem('myPageImg');
+    showImage(DEFAULT_IMG);
+  });
+</script>
+</body>
+</html>
